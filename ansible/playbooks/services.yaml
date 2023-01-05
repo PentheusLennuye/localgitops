@@ -1,0 +1,41 @@
+---
+  - name: Create service wildcard certificates
+    include_tasks: service_certs.yaml
+    loop: ['postgresql', 'redis']
+
+  - name: Create harbor certificates
+    include_tasks: harbor_certs.yaml
+    loop: ['chartmuseum', 'core', 'jobservice', 'portal', 'registry', 'trivy']
+
+  - name: Create traefik wildcard certificates
+    include_tasks: traefik_certs.yaml
+
+  - name: Create Jenkins config directory
+    ansible.builtin.file:
+      state: directory
+      path: "{{ services_rootdir }}/config"
+
+  - name: Send Jenkins config-as-code to the config directory
+    ansible.builtin.template:
+      src: "templates/casc.yaml.j2"
+      dest:   "{{ services_rootdir }}/config/casc.yaml"
+
+  - name: Send Jenkins plugins to the config directory
+    ansible.builtin.copy:
+      src: "files/plugins.jenkins.txt"
+      dest:   "{{ services_rootdir }}/config/plugins.jenkins.txt"
+
+  - name: Create variables in deployment variables
+    ansible.builtin.lineinfile:
+      path: "{{ services_rootdir }}/variables.tf"
+      line: "variable \"{{ item.key }}\" {}"
+      create: yes
+    loop: "{{ lookup('dict', terraform.services) }}"
+
+  - name: Set variables values in deployment tfvars
+    ansible.builtin.lineinfile:
+      path: "{{ services_rootdir }}/terraform.tfvars"
+      regexp: "^{{ item.key }} ="
+      line: "{{ item.key }} = \"{{ item.value }}\""
+      create: yes
+    loop: "{{ lookup('dict', terraform.services) }}"

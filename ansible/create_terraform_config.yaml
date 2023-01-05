@@ -1,0 +1,37 @@
+---
+- name: Required localhost tasks
+  hosts: localhost
+  vars:
+    pvrootdir: "{{ ansible_env.PWD }}/{{ k3d.pvdir }}"
+    tfrootdir: "{{ ansible_env.PWD }}/{{ terraform.rootdir }}"
+    cachedir: "{{ tfrootdir }}/plugin-cache"
+    cadir: "{{ ansible_env.PWD}}/../cacerts"
+    certdir: "{{ tfrootdir }}/certs"
+    cluster_rootdir: "{{ tfrootdir }}/cluster"
+    networking_rootdir: "{{ tfrootdir }}/networking"
+    services_rootdir: "{{ tfrootdir }}/services"
+    populate_rootdir: "{{ tfrootdir }}/populate"
+  tasks:
+    - name: Install helm repositories
+      tags: packages
+      kubernetes.core.helm_repository:
+        name: "{{ item.name }}"
+        repo_url: "{{ item.repo_url }}"
+      loop:
+        - { name: 'hashicorp', repo_url: 'https://helm.releases.hashicorp.com' }
+        - { name: 'jenkinsci', repo_url: 'https://charts.jenkins.io' }
+    - name: Create unsaved directories
+      ansible.builtin.file:
+        state: directory
+        path: "{{ item }}"
+      loop:
+        - "{{ cachedir }}"
+        - "{{ certdir }}"
+    - name: Include cluster tasks
+      ansible.builtin.include_tasks: playbooks/cluster.yaml
+    - name: Include networking tasks
+      ansible.builtin.include_tasks: playbooks/networking.yaml
+    - name: Include service tasks
+      ansible.builtin.include_tasks: playbooks/services.yaml
+    - name: Include populate tasks
+      ansible.builtin.include_tasks: playbooks/populate.yaml

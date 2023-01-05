@@ -1,0 +1,58 @@
+---
+  - name: "Create {{ item }} Private Key"
+    community.crypto.openssl_privatekey:
+      path: "{{ certdir }}/star_{{ item }}_svc_cluster_local.key"
+    run_once: true
+
+  - name: "Check if {{ item }} wildcard cert already exists"
+    stat:
+      path: "{{ certdir }}/star_{{ item }}_svc_cluster_local.pem"
+    run_once: true
+    register: cert_exists
+
+  - name: "Create {{ item }} wildcard CSR"
+    community.crypto.openssl_csr_pipe:
+      basic_constraints:
+        - 'CA:FALSE'
+      extended_key_usage:
+        - serverAuth
+      key_usage:
+        - digitalSignature
+        - nonRepudiation
+        - keyEncipherment
+        - dataEncipherment
+      privatekey_path: "{{ certdir }}/star_{{ item }}_svc_cluster_local.key"
+      subject:
+        C: CA
+        ST: Quebec
+        L: Montreal
+        O: LocalGitOps
+        OU: LocalGitOps Signing Authority
+        CN: "{{ item }}.svc.cluster.local"
+      subject_alt_name:
+        - "DNS:*.{{ item }}"
+        - "DNS:*.{{ item }}.svc"
+        - "DNS:*.{{ item }}.svc.cluster.local"
+    when: not cert_exists.stat.exists
+    register: csr
+    run_once: true
+
+  - name: "Sign {{ item }} wildcard CSR with CA"
+    community.crypto.x509_certificate_pipe:
+      csr_content: "{{ csr.csr }}"
+      provider: ownca
+      ownca_path: "{{ cadir }}/localgitops-ca.pem"
+      ownca_privatekey_path: "{{ cadir }}/localgitops-ca.key"
+      ownca_privatekey_passphrase: "{{ ca_key_password }}"
+      ownca_not_after: +365d  # valid for one year
+      ownca_not_before: "-1d"  # valid since yesterday
+    when: not cert_exists.stat.exists
+    register: result
+    run_once: true
+    
+  - name: "Save {{ item }} wildcard cert to store"
+    ansible.builtin.copy:
+      dest: "{{ certdir }}/star_{{ item }}_svc_cluster_local.pem"
+      content: "{{ result.certificate }}"
+      mode: '0644'
+    when: not cert_exists.stat.exists

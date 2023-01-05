@@ -1,0 +1,47 @@
+---
+  - name: Install repositories in RedHat
+    ansible.builtin.include_tasks: playbooks/repositories_redhat.yaml
+    when: ansible_facts['os_family'] == 'RedHat'
+    tags: packages
+  - name: Install repositories on Debian or Ubuntu
+    ansible.builtin.include_tasks: playbooks/repositories_debian.yaml
+    when: ansible_facts['os_family'] == 'Debian'
+    tags: packages
+  - name: Install K3D from Github
+    become: true
+    block:
+      - name: check if k3d already installed
+        ansible.builtin.command: which k3d
+        register: k3d
+        changed_when: false
+        failed_when: false
+      - name: debug k3d message
+        ansible.builtin.debug:
+          msg: "'which k3d' returns {{ k3d.rc }}"
+      - name: download k3d installation script
+        ansible.builtin.get_url:
+          url: https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh
+          dest: /usr/local/src/k3d_install.sh
+          mode: 0755
+        when: "k3d.rc == 1"
+      - name: install k3d installation script
+        ansible.builtin.command:
+          cmd: /usr/local/src/k3d_install.sh
+        when: "k3d.rc == 1"
+  - name: Install required packages on Linux
+    become: true
+    ansible.builtin.package:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - helm
+      - kubectl
+      - terraform
+      - vault
+  - name: Install required Python applications on Linux
+    become: true
+    ansible.builtin.pip:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - jq

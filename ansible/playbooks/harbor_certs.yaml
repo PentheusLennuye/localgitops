@@ -1,0 +1,60 @@
+---
+  - name: "Create harbor-{{ item }} Private Key"
+    community.crypto.openssl_privatekey:
+      path: "{{ certdir }}/harbor_{{ item }}_harbor_svc_cluster_local.key"
+    run_once: true
+
+  - name: "Check if {{ item }} cert already exists"
+    stat:
+      path: "{{ certdir }}/harbor_{{ item }}_harbor_svc_cluster_local.pem"
+    run_once: true
+    register: cert_exists
+
+  - name: "Create harbor-{{ item }} CSR"
+    community.crypto.openssl_csr_pipe:
+      basic_constraints:
+        - 'CA:FALSE'
+      extended_key_usage: 
+        - serverAuth
+      key_usage: 
+        - digitalSignature
+        - nonRepudiation
+        - keyEncipherment
+        - dataEncipherment
+      privatekey_path: "{{ certdir }}/harbor_{{ item }}_harbor_svc_cluster_local.key"
+      subject:
+        C: CA
+        ST: Quebec
+        L: Montreal
+        O: LocalGitOps
+        OU: LocalGitOps Signing Authority
+        CN: "harbor-{{ item }}.harbor.svc.cluster.local"
+      subject_alt_name:
+        - "DNS:harbor-{{ item }}"
+        - "DNS:harbor-{{ item }}.harbor"
+        - "DNS:harbor-{{ item }}.harbor.svc"
+        - "DNS:harbor-{{ item }}.harbor.svc.cluster.local"
+        - "DNS:{{ k3d.harbor_hostname}}.{{ k3d.domain }}"
+    when: not cert_exists.stat.exists
+    register: csr
+    run_once: true
+
+  - name: "Sign harbor-{{ item }} CSR with CA"
+    community.crypto.x509_certificate_pipe:
+      csr_content: "{{ csr.csr }}"
+      provider: ownca
+      ownca_path: "{{ cadir }}/localgitops-ca.pem"
+      ownca_privatekey_path: "{{ cadir }}/localgitops-ca.key"
+      ownca_privatekey_passphrase: "{{ ca_key_password }}"
+      ownca_not_after: +365d  # valid for one year
+      ownca_not_before: "-1d"  # valid since yesterday
+    when: not cert_exists.stat.exists
+    register: result
+    run_once: true
+    
+  - name: "Save harbor-{{ item }} cert to store"
+    ansible.builtin.copy:
+      dest: "{{ certdir }}/harbor_{{ item }}_harbor_svc_cluster_local.pem"
+      content: "{{ result.certificate }}"
+      mode: '0644'
+    when: not cert_exists.stat.exists

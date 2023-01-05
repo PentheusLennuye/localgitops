@@ -1,0 +1,31 @@
+---
+logs:
+  general:
+    level: ERROR
+  access:
+    enabled: false
+
+metrics:
+  prometheus: null
+
+additionalArguments:
+  - "--serversTransport.insecureSkipVerify=true"
+
+ports:
+  traefik:
+    port: 9000
+    hostPort: 9000
+    expose: true
+    exposedPort: 9000
+    protocol: TCP
+  websecure:
+    port: 8443
+    hostPort: 443
+    expose: true
+    exposedPort: 443
+    protocol: TCP
+
+tlsStore:
+  default:
+    defaultCertificate:
+      secretName: ca-crt

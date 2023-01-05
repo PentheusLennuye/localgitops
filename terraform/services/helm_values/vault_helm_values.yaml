@@ -1,0 +1,11 @@
+---
+server:
+  dataStorage:
+    enabled: true
+    mountPath: /vault/data
+  service:
+    enabled: true
+    type: ClusterIP
+  ingress:
+    enabled: true
+    pathType: Prefix

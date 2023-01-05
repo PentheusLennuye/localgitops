@@ -1,0 +1,16 @@
+---
+  - name: Create variables in populate variables
+    ansible.builtin.lineinfile:
+      path: "{{ populate_rootdir }}/variables.tf"
+      line: "variable \"{{ item.key }}\" {}"
+      create: yes
+    loop: "{{ lookup('dict', terraform.populate ) }}"
+
+  - name: Set variables in populate tfvars
+    ansible.builtin.lineinfile:
+      path: "{{ populate_rootdir }}/terraform.tfvars"
+      regexp: "^{{ item.key }} ="
+      line: "{{ item.key }} = \"{{ item.value }}\""
+      create: yes
+    loop: "{{ lookup('dict', terraform.populate ) }}"
+

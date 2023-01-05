@@ -1,0 +1,61 @@
+<flow-definition plugin="workflow-job@1254.v3f64639b_11dd">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@2.2118.v31fd5b_9944b_5">
+      <jobProperties>
+        <string>org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty</string>
+        <string>jenkins.model.BuildDiscarderProperty</string>
+      </jobProperties>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description>Ensuring Vault communications are OK</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>5</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty>
+      <abortPrevious>false</abortPrevious>
+    </org.jenkinsci.plugins.workflow.job.properties.DisableConcurrentBuildsJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3583.v4f58de0d78d5">
+    <script>   def secrets = [
+        [
+            path: &apos;kv/ci/tests/test_keyvalue&apos;, engineVersion: 2, secretValues: [
+                [envVar: &apos;GREETING&apos;, vaultKey: &apos;greeting&apos;],
+                [envVar: &apos;RECIPIENT&apos;, vaultKey: &apos;recipient&apos;]
+            ]
+        ]
+    ]
+
+    pipeline {
+        agent any
+        options {
+            buildDiscarder(logRotator(numToKeepStr: &apos;5&apos;))
+            disableConcurrentBuilds()
+        }
+        stages{
+            stage(&apos;Vault&apos;) {
+                steps {
+                    withVault([vaultSecrets: secrets]) {
+                        sh &apos;echo $GREETING&apos;  // Single-quotes for secrets
+                        sh &apos;echo $RECIPIENT&apos;
+                    }
+                }
+            }
+        }
+    }
+</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>

@@ -1,0 +1,57 @@
+---
+k3d:
+  domain: gitops.local
+  k8s_hostname: k8s
+  jenkins_hostname: jenkins
+  vault_hostname: vault
+  harbor_hostname: harbor
+  harbor_notary_hostname: harbor-notary
+  pvdir: ../volumes
+  persistent_volumes: [ pv1, pv2, pv3, pv4, pv5, pv6 ]
+terraform:
+  rootdir: ../terraform
+  cluster:
+    cluster_fqdn: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    jenkins_pv: pv1
+    k3dver: v1.25.3-k3s1
+    harbor_4_pv: pv4
+    harbor_5_pv: pv5
+    harbor_6_pv: pv6
+    harbor_nodeport: 30081
+    postgresql_pv: pv3
+    vault_nodeport: 30080
+    vault_pv: pv2
+  networking:
+    domain: "{{ k3d.domain }}"
+    harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
+    jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
+    k8s_fqdn: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
+  services:
+    domain: "{{ k3d.domain }}"
+    harbor_admin_password: "{{ harbor_admin_password }}"
+    harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
+    harbor_notary_fqdn: "{{ k3d.harbor_notary_hostname }}.{{ k3d.domain }}"
+    harbor_helm_version: v1.11.0
+    harbor_jobservice: true
+    harbor_nodeport: 30081
+    harbor_notary: false
+    harbor_storage: 10Gi
+    jenkins_admin_id: "{{ jenkins_admin_id }}"
+    jenkins_admin_password: "{{ jenkins_admin_password }}"
+    jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
+    jenkins_storage: 10Gi
+    postgresql_version: '13.9.0'
+    postgresql_helm_version: v12.1.6
+    postgresql_password: "{{ sql_password }}"
+    postgresql_storage: 10Gi
+    vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
+    vault_nodeport: 30080
+    vault_helm_version: v0.22.1
+    vault_storage: 10Gi
+  populate:
+    github_machine_token: "{{ github_machine_token }}"
+    jenkins_admin_id: "{{ jenkins_admin_id }}"
+    jenkins_admin_password: "{{ jenkins_admin_password }}"
+    jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
+

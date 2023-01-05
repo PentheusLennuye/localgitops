@@ -1,0 +1,13 @@
+---
+image:
+  tag: 13.9.0
+primary:
+  initdb:
+    scripts:
+      init.sql: |
+        CREATE DATABASE registry;
+        CREATE DATABASE notary_server;
+        CREATE DATABASE notary_signer;
+volumePermissions:
+  enabled: true
+

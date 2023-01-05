@@ -1,0 +1,13 @@
+---
+  - name: Install required binaries on Mac
+    tags: packages
+    community.general.homebrew:
+      name: "{{ item }}"
+      state: present
+    loop:
+      - k3d
+      - helm
+      - jq
+      - terraform
+      - kubectl
+      - vault

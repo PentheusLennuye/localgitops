@@ -1,0 +1,48 @@
+---
+  - name: Set DPKG architecture
+    ansible.builtin.set_fact:
+      dpkg_arch: "{{ (ansible_architecture=='x86_64')|ternary('amd64',ansible_architecture) }}"
+  - name: DEBUG
+    ansible.builtin.debug:
+      msg: dpkg_arch is {{ dpkg_arch }}
+  - name: Set apt Hashicorp Repository
+    become: true
+    block:
+      - name: hashicorp-archive-keyring
+        ansible.builtin.get_url:
+          url: https://apt.releases.hashicorp.com/gpg
+          dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+          mode: '0644'
+      - name: hashicorp.list
+        ansible.builtin.apt_repository:
+          repo: >
+            deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.asc]
+            https://apt.releases.hashicorp.com
+            {{ ansible_distribution_release }}  main
+  - name: Set apt Helm Repository
+    become: true
+    block:
+      - name: helm-keyring
+        ansible.builtin.get_url:
+          url: https://baltocdn.com/helm/signing.asc
+          dest: /usr/share/keyrings/helm.asc
+          mode: '0644'
+      - name: helm-stable-debian.list
+        ansible.builtin.apt_repository:
+          repo: >
+            deb [arch={{ dpkg_arch }}
+            signed-by=/usr/share/keyrings/helm.asc]
+            https://baltocdn.com/helm/stable/debian/ all main
+  - name: Set apt Kubernetes Repository
+    become: true
+    block:
+      - name: kubernetes-archive-keyring
+        ansible.builtin.get_url:
+          url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+          dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+          mode: '0644'
+      - name: kubernetes.list
+        ansible.builtin.apt_repository:
+          repo: >
+            deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg]
+            https://apt.kubernetes.io/ kubernetes-xenial main

@@ -1,0 +1,60 @@
+jenkins:
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            description: "Jenkins administrators"
+            permissions:
+              - "Overall/Administer"
+            assignments:
+              - "${JENKINS_ADMIN_ID}"
+          - name: "readonly"
+            description: "Read-only users"
+            permissions:
+              - "Overall/Read"
+              - "Job/Read"
+            assignments:
+              - "authenticated"
+  clouds:
+    - kubernetes:
+        containerCap: 10
+        containerCapStr: "10"
+        credentialsId: "localgitops_kubeconfig"
+        jenkinsUrl: "http://jenkins.jenkins.svc.cluster.local:8080"
+        name: "localgitops-kubernetes"
+        serverUrl: "https://kubernetes.default.svc.cluster.local"
+        webSocket: true
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+  projectNamingStrategy:
+    roleBased:
+      forceExistingJobs: false
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+       - id: ${JENKINS_ADMIN_ID}
+         password: ${JENKINS_ADMIN_PASSWORD}
+security:
+  queueItemAuthenticator:
+    authenticators:
+    - global:
+        strategy: triggeringUsersAuthorizationStrategy
+unclassified:
+  gitHubPluginConfig:
+    configs:
+    - apiUrl: "{{ github_url }}"
+      credentialsId: "github_machine_credentials"
+      manageHooks: false
+      name: "GitHub"
+    hookUrl: "https://jenkins.{{ k3d.domain }}/github-webhook/"
+  hashicorpVault:
+    configuration:
+      engineVersion: 2
+      timeout: 60
+      vaultCredentialId: "jenkins.{{ k3d.domain }}"
+      vaultUrl: "http://vault.vault.svc.cluster.local:8200"
+  location:
+    url: https://jenkins.{{ k3d.domain }}

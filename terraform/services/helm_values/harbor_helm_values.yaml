@@ -1,0 +1,52 @@
+chartmuseum:
+  replicas: 1
+core:
+  replicas: 1
+database:
+  type: external
+  external:
+    host: postgresql.postgresql.svc.cluster.local
+    port: 5432
+    coreDatabase: registry
+    notaryServerDatabase: notary_server
+    notarySignerDatabase: notary_signer
+    sslmode: disable
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: none
+    secret:
+      secretName: traefik-tls
+      notarySecretName: traefik-tls
+internalTLS:
+  enabled: true
+  certSource: secret
+  chartmuseum:
+    secretName: harbor-chartmuseum-tls
+  core:
+    secretName: harbor-core-tls
+  jobservice:
+    secretName: harbor-jobservice-tls
+  portal:
+    secretName: harbor-portal-tls
+  registry:
+    secretName: harbor-registry-tls
+  trivy:
+    secretName: harbor-trivy-tls
+jobservice:
+  enabled: True
+  replicas: 1
+notary:
+  enabled: False
+  secretName: harbor-notary-tls
+  server:
+    replicas: 1
+  signer:
+    replicas: 1
+portal:
+  replicas: 1
+redis:
+  type: internal
+registry:
+  replicas: 1

@@ -1,0 +1,27 @@
+---
+- name: Install binaries and scripts
+  hosts: localhost
+  vars:
+    rhdist: "{{ 'fedora' if ansible_distribution == 'Fedora' else 'RHEL'}}" 
+    kh: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    jh: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
+    vh: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
+    hh: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
+    hnh: "{{ k3d.harbor_notary_hostname }}.{{ k3d.domain }}"
+  tasks:
+    - name: Append hostname alias to /etc/hosts
+      when: ansible_facts['os_family'] != 'Darwin'
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        backrefs: true
+        regexp: ^(127\.0\.0\.1)\s+(?!{{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }}) ?(.*)$
+        line: \1 {{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }} \2
+    - name: Install required binaries on Mac
+      ansible.builtin.include_tasks: playbooks/binaries_darwin.yaml
+      when: ansible_facts['os_family'] == 'Darwin'
+      tags: packages
+    - name: Install required binaries on Linux
+      ansible.builtin.include_tasks: playbooks/binaries_linux.yaml
+      when: ansible_facts['os_family'] != 'Darwin'
+      tags: packages

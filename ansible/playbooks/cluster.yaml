@@ -1,0 +1,38 @@
+---
+  - name: Create K8S persistent volumes
+    ansible.builtin.file:
+      state: directory
+      mode: '0775'
+      path: "{{ pvrootdir }}/{{ item }}"
+    loop: "{{ k3d.persistent_volumes }}"
+
+  - name: Create PV variables in k3d deployment variables
+    ansible.builtin.lineinfile:
+      path: "{{ cluster_rootdir }}/variables.tf"
+      line: "variable \"{{ item }}\" {}"
+      create: yes
+    loop: "{{ k3d.persistent_volumes }}"
+
+  - name: Create other variables in k3d deployment variables
+    ansible.builtin.lineinfile:
+      path: "{{ cluster_rootdir }}/variables.tf"
+      line: "variable \"{{ item.key }}\" {}"
+      create: yes
+    loop: "{{ lookup('dict', terraform.cluster) }}"
+
+  - name: Set PV variables in k3d deployment tfvars
+    ansible.builtin.lineinfile:
+      path: "{{ cluster_rootdir }}/terraform.tfvars"
+      regexp: "^{{ item }} = "
+      line: "{{ item }} = \"{{ansible_env.PWD}}/{{ k3d.pvdir }}/{{ item }}\""
+      create: yes
+    loop: "{{ k3d.persistent_volumes }}"
+
+  - name: Set other variables in k3d deployment tfvars
+    ansible.builtin.lineinfile:
+      path: "{{ cluster_rootdir }}/terraform.tfvars"
+      regexp: "^{{ item.key }} ="
+      line: "{{ item.key }} = \"{{ item.value }}\""
+      create: yes
+    loop: "{{ lookup('dict', terraform.cluster) }}"
+

@@ -1,0 +1,86 @@
+---
+- name: Create and install localgitops CA cert
+  hosts: localhost
+  vars:
+    cadir: "{{ ansible_env.PWD }}/../cacerts"
+  tasks:
+  - name: Create cacert directory
+    ansible.builtin.file:
+      state: directory
+      path: "{{ cadir }}"
+  - name: Create CA private key
+    community.crypto.openssl_privatekey:
+      path: "{{ cadir }}/localgitops-ca.key"
+      cipher: auto
+      passphrase: "{{ ca_key_password }}"
+    run_once: true
+
+  - name: Check if CA cert already exists
+    stat:
+      path: "{{ cadir }}/localgitops-ca.pem"
+    run_once: true
+    register: ca_cert_exists
+
+  - name: Create CSR for CA certificate
+    community.crypto.openssl_csr_pipe:
+      basic_constraints_critical: true
+      basic_constraints:
+        - 'CA:TRUE'
+      key_usage:
+        - keyCertSign
+      key_usage_critical: true
+      privatekey_path: "{{ cadir }}/localgitops-ca.key"
+      privatekey_passphrase: "{{ ca_key_password }}"
+      subject:
+        C: CA
+        ST: Quebec
+        L: Montreal
+        O: LocalGitOps
+        OU: LocalGitOps Signing Authority
+        CN: LocalGitOps Root CA
+      use_common_name_for_san: false
+    when: not ca_cert_exists.stat.exists
+    register: ca_csr
+    run_once: true
+
+  - name: Create self-signed CA certificate from CSR
+    community.crypto.x509_certificate:
+      csr_content: "{{ ca_csr.csr }}"
+      path: "{{ cadir }}/localgitops-ca.pem"
+      privatekey_path: "{{ cadir }}/localgitops-ca.key"
+      privatekey_passphrase: "{{ ca_key_password }}"
+      provider: selfsigned
+    when: not ca_cert_exists.stat.exists
+    register: result 
+    run_once: true
+
+  - name: Send CA to the ca-certificate store Debian
+    become: true
+    ansible.builtin.copy:
+      src: "{{ cadir }}/localgitops-ca.pem"
+      dest: "/usr/local/share/ca-certificates/localgitops_CA.crt"
+      mode: '0644'
+    run_once: true
+    when: ansible_facts['os_family'] == 'Debian'
+
+  - name: Update CA Certificates Debian
+    become: true
+    ansible.builtin.shell: /usr/sbin/update-ca-certificates -f
+    run_once: true
+    when: ansible_facts['os_family'] == 'Debian'
+
+  - name: Send CA to the ca-certificate store Fedora
+    become: true
+    ansible.builtin.copy:
+      src: "{{ cadir }}/localgitops-ca.pem"
+      dest: "/etc/pki/ca-trust/source/anchors/localgitops-ca.pem"
+      mode: '0644'
+    run_once: true
+    when: ansible_facts['os_family'] == 'RedHat'
+
+  - name: Update CA Certificates Fedora
+    become: true
+    ansible.builtin.shell: /usr/bin/update-ca-trust
+    run_once: true
+    when: ansible_facts['os_family'] == 'RedHat'
+

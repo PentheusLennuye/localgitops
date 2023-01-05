@@ -1,0 +1,121 @@
+OS=$(uname -s)
+while [ -z $CA_KEY_PASSWORD ];
+do
+  read -s -p "Enter the CA_KEY_PASSWORD for ssl cert generation: " ckp
+  echo
+  if [ "$ckp" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm CA_KEY_PASSWORD: " cckp
+    echo
+  if [ "$ckp" == "$cckp" ]; then
+    export CA_KEY_PASSWORD=$ckp
+  else
+    echo "Passwords do not match"
+  fi
+done
+
+if [ -z $JENKINS_ADMIN_USER ]; then
+  read -p "Set the JENKINS_ADMIN_USER [$USER]: " jau
+  if [ "$jau" == "" ]; then
+    export JENKINS_ADMIN_USER=$USER
+  else
+    export JENKINS_ADMIN_USER=$jau
+  fi
+fi
+
+while [ -z $JENKINS_ADMIN_PASSWORD ];
+do
+  read -s -p "Set the JENKINS_ADMIN_PASSWORD: " jap
+  echo
+  if [ "$jap" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm JENKINS_ADMIN_PASSWORD: " cjap
+    echo
+  if [ "$jap" == "$cjap" ]; then
+    export JENKINS_ADMIN_PASSWORD=$jap
+  else
+    echo "Passwords do not match"
+  fi
+done
+
+while [ -z $HARBOR_ADMIN_PASSWORD ];
+do
+  read -s -p "Set the HARBOR_ADMIN_PASSWORD: " hap
+  echo
+  if [ "$hap" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm HARBOR_ADMIN_PASSWORD: " chap
+    echo
+  if [ "$hap" == "$chap" ]; then
+    export HARBOR_ADMIN_PASSWORD=$hap
+  else
+    echo "Passwords do not match"
+  fi
+done
+
+
+if [ -z $GITHUB_URL ]; then
+  read -p "Set the GITHUB_URL [https://api.github.com]: " gurl
+  if [ "$gurl" == "" ]; then
+    export GITHUB_URL=https://api.github.com
+  else
+    export GUTHUB_URL=$gurl
+  fi
+fi
+
+while [ -z $GITHUB_MACHINE_TOKEN ];
+do
+  read -s -p "Set the GITHUB_MACHINE_TOKEN: " gmt
+  echo
+  if [ "$gmt" != "" ]; then
+    export GITHUB_MACHINE_TOKEN=$gmt
+  fi
+done
+
+while [ -z $REDIS_PASSWORD ];
+do
+  read -s -p "Set the REDIS_PASSWORD: " rep
+  echo
+  if [ "$rep" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm REDIS_PASSWORD: " crep
+    echo
+  if [ "$rep" == "$crep" ]; then
+    export REDIS_PASSWORD=$rep
+  else
+    echo "Passwords do not match"
+  fi
+done
+
+while [ -z $SQL_PASSWORD ];
+do
+  read -s -p "Set the SQL_PASSWORD: " sqp
+  echo
+  if [ "$sqp" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm SQL_PASSWORD: " csqp
+    echo
+  if [ "$sqp" == "$csqp" ]; then
+    export SQL_PASSWORD=$sqp
+  else
+    echo "Passwords do not match"
+  fi
+done
+
+# Query sudo password for ansible "become" requirements
+if [ "$OS" != "Darwin" ]; then
+  while [ -z $SUDO_PASSWORD ];
+  do
+    read -s -p "Enter localhost SUDO_PASSWORD: " sp
+    echo
+    if [ "$sp" == "" ]; then
+      continue
+    fi
+    export SUDO_PASSWORD=sp
+  done
+fi
