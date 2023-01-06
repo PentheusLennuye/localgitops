@@ -2,6 +2,7 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 THIS_DIR=$PWD
+OS=(uname -s)
 
 read -p "Deleting GitOps Certs [y/N]? " confirm
 if [ "$confirm" == "y" ];
@@ -17,8 +18,9 @@ if [ "$confirm" == "y" ];
         -e \
         "ansible_become_pass=$SUDO_PASSWORD \
          ca_key_password=$CA_KEY_PASSWORD" \
-        create_ca.yaml || exit $?
+        delete_ca.yaml || exit $?
     fi
+    rm -rf $SCRIPT_DIR/../terraform/certs
     echo "The CA and certs are deleted."
     cd $THIS_DIR
 else
