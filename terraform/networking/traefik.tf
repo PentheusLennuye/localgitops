@@ -19,3 +19,13 @@ resource "kubernetes_secret" "localgitops-wildcard-tls" {
   }
 }
 
+# Traefik
+resource "helm_release" "traefik" {
+  name       = "traefik"
+  namespace  = "kube-system"
+  repository = "https://traefik.github.io/charts"
+  chart      = "traefik"
+  version    = var.traefik_helm_version
+  values     = ["${file("helm_values/traefik_helm_values.yaml")}"]
+}
+

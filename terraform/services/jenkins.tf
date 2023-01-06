@@ -195,6 +195,7 @@ resource "kubernetes_ingress_v1" "jenkins-ingress-v1" {
       }
     }
     tls {
+      hosts = [ var.jenkins_fqdn ]
       secret_name = "jenkins-tls"
     }
   }

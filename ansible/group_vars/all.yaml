@@ -26,6 +26,7 @@ terraform:
     harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     k8s_fqdn: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    traefik_helm_version: "v20.8.0"
     vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
   services:
     domain: "{{ k3d.domain }}"
