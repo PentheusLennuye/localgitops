@@ -1,0 +1,44 @@
+---
+- name: Create and install localgitops CA cert
+  hosts: localhost
+  vars:
+    cadir: "{{ ansible_env.PWD }}/../cacerts"
+  tasks:
+  - name: Delete CA private key
+    ansible.builtin.file:
+      state: absent
+      path: "{{ cadir }}/localgitops-ca.key"
+  - name: Delete self-signed CA certificate
+    ansible.builtin.file:
+      state: absent
+      path: "{{ cadir }}/localgitops-ca.pem"
+  - name: Delete cacert directory
+    ansible.builtin.file:
+      state: absent
+      path: "{{ cadir }}"
+
+  - name: Delete CA from the ca-certificate store Debian
+    become: true
+    ansible.builtin.file:
+      state: absent
+      dest: "/usr/local/share/ca-certificates/localgitops_CA.crt"
+    when: ansible_facts['os_family'] == 'Debian'
+
+  - name: Update CA Certificates Debian
+    become: true
+    ansible.builtin.shell: /usr/sbin/update-ca-certificates -f
+    when: ansible_facts['os_family'] == 'Debian'
+
+  - name: Delete CA from the ca-certificate store Fedora
+    become: true
+    ansible.builtin.file:
+      state: absent
+      dest: "/etc/pki/ca-trust/source/anchors/localgitops-ca.pem"
+    when: ansible_facts['os_family'] == 'RedHat'
+
+  - name: Update CA Certificates Fedora
+    become: true
+    ansible.builtin.shell: /usr/bin/update-ca-trust
+    run_once: true
+    when: ansible_facts['os_family'] == 'RedHat'
+
