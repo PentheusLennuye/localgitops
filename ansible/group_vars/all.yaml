@@ -2,10 +2,11 @@
 k3d:
   domain: gitops.local
   k8s_hostname: k8s
+  dex_hostname: oicd
   jenkins_hostname: jenkins
-  vault_hostname: vault
   harbor_hostname: harbor
   harbor_notary_hostname: harbor-notary
+  vault_hostname: vault
   pvdir: ../volumes
   persistent_volumes: [ pv1, pv2, pv3, pv4, pv5, pv6 ]
 terraform:
@@ -29,6 +30,8 @@ terraform:
     traefik_helm_version: "v20.8.0"
     vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
   services:
+    dex_helm_version: v2.15.6
+    dex_fqdn: "{{ k3d.dex_hostname }}.{{ k3d.domain }}"
     domain: "{{ k3d.domain }}"
     harbor_admin_password: "{{ harbor_admin_password }}"
     harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"

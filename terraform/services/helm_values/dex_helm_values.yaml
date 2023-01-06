@@ -1,0 +1,7 @@
+---
+config:
+  enablePasswordDB: true
+  storage:
+    type: memory
+gprc: false
+https: false
