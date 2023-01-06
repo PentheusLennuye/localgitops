@@ -63,7 +63,7 @@ at <https:/github.com/settings/tokens>
 
 ### B.2 Mac OS X
 
-- Docker Desktop
+- Docker Desktop with VirtioFS file sharing turned on[^1]
 - Homebrew, configured to install to local user
 - Ansible >= 2.13
 - pip3 with the 'cryptography' library installed
@@ -114,12 +114,8 @@ to generate and import a localgitops CA certificate.
 
 Execute `./genca.sh`
 
-On Debian-based systems, this will import the CA certificate into the system
-for you. It is found in _/usr/local/share/ca-certificates_. If you delete it,
-do not forget to run __update-ca-certificates -f__ afterwards to flush it.
-
-On Mac OS, open your keychain application and import the certificate in
-_cacert/_.
+To delete all the certificates, including the ones for the services, execute:
+`scripts/delete_certs.sh`
 
 #### C.2.2 Everything Else
 
@@ -246,3 +242,4 @@ and JobService services, respectively.
   account resource. Kubernetes secret will need to be used to autogenerate
   a secret name in a future build.
 
+[^1]: As of Q1 2023, the default is the traditional _gRPC FUSE_. It is not as awful as the original _oxsfx_. but it is still painful.

@@ -50,9 +50,12 @@ cd $THISDIR
 
 echo "CA certificate created in cacerts/"
 if [ "$OS" == "Darwin" ]; then
-  echo "Please run keychain and import the ca cert, then mark it 'trusted.'"
-  echo ">cacerts/localgitops-ca.pem"
+  sudo security add-trusted-cert -d -r trustRoot \
+    -k /Library/Keychains/System.keychain cacerts/localgitops-ca.pem
 else
-  echo "Ubuntu and Fedora have the cert imported into the system trusted ca-certificates."
-  echo "Mozilla does not use the system store; please import cacerts/*localgitops-ca.pem"
+  cat <<- EOMESSAGE
+  Ubuntu and Fedora have the cert imported into the system trusted
+  ca-certificates. Mozilla might not use the system store; please check and
+  import cacerts/*localgitops-ca.pem at need.
+EOMESSAGE
 fi
