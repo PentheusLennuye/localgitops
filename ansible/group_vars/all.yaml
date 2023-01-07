@@ -6,9 +6,10 @@ k3d:
   jenkins_hostname: jenkins
   harbor_hostname: harbor
   harbor_notary_hostname: harbor-notary
+  openldap_hostname: openldap
   vault_hostname: vault
   pvdir: ../volumes
-  persistent_volumes: [ pv1, pv2, pv3, pv4, pv5, pv6 ]
+  persistent_volumes: [ pv1, pv2, pv3, pv4, pv5, pv6, pv7 ]
 terraform:
   rootdir: ../terraform
   cluster:
@@ -19,6 +20,7 @@ terraform:
     harbor_5_pv: pv5
     harbor_6_pv: pv6
     harbor_nodeport: 30081
+    openldap_pv: pv7
     postgresql_pv: pv3
     vault_nodeport: 30080
     vault_pv: pv2
@@ -45,6 +47,10 @@ terraform:
     jenkins_admin_password: "{{ jenkins_admin_password }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     jenkins_storage: 10Gi
+    openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
+    openldap_helm_version: v4.0.0
+    openldap_pv_vol: 'pv7'
+    openldap_storage: 8Gi
     postgresql_version: '13.9.0'
     postgresql_helm_version: v12.1.6
     postgresql_password: "{{ sql_password }}"
