@@ -30,7 +30,7 @@ fill_variables_and_configs () {
     "jenkins_admin_id=$JENKINS_ADMIN_USER \
     jenkins_admin_password=$JENKINS_ADMIN_PASSWORD \
     harbor_admin_password=$HARBOR_ADMIN_PASSWORD \
-    openldap_admin_id=$OPENLDAP_ADMIN_USER \
+    openldap_admin_username=$OPENLDAP_ADMIN_USER \
     openldap_admin_password=$OPENLDAP_ADMIN_PASSWORD \
     openldap_bind_password=$OPENLDAP_BIND_PASSWORD \
     redis_password=$REDIS_PASSWORD \

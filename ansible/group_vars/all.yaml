@@ -26,9 +26,11 @@ terraform:
     vault_pv: pv2
   networking:
     domain: "{{ k3d.domain }}"
+    dex_fqdn: "{{ k3d.dex_hostname }}.{{ k3d.domain }}"
     harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     k8s_fqdn: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
     traefik_helm_version: "v20.8.0"
     vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
   services:
@@ -47,11 +49,11 @@ terraform:
     jenkins_admin_password: "{{ jenkins_admin_password }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     jenkins_storage: 10Gi
-    openldap_admin_username: "{{ k3d.openldap_admin_username }}"
-    openldap_admin_password: "{{ k3d.openldap_admin_password }}"
-    openldap_bind_password: "{{ k3d.openldap_bind_password }}"
+    openldap_admin_username: "{{ openldap_admin_username }}"
+    openldap_admin_password: "{{ openldap_admin_password }}"
+    openldap_bind_password: "{{ openldap_bind_password }}"
     openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
-    openldap_helm_version: v4.0.0
+    openldap_helm_version: v4.0.2
     openldap_pv_vol: 'pv7'
     openldap_storage: 8Gi
     postgresql_version: '13.9.0'

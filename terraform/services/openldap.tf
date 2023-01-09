@@ -1,6 +1,7 @@
 locals {
   openldap_namespace = "openldap"
   openldap_storageclass_name = "openldap-sc"
+  openldap_pvc_name = "openldap-pvc"
   openldap_reclaim_policy = "Retain"
   openldap_access_mode = "ReadWriteOnce"
 }
@@ -28,7 +29,7 @@ resource "kubernetes_secret" "openldap-tls" {
   }
 }
 
-# ========== Storage Classes =============================
+# ========== Storage =========================================================
 
 resource "kubernetes_storage_class" "openldap-sc" {
   metadata {
@@ -38,6 +39,7 @@ resource "kubernetes_storage_class" "openldap-sc" {
   reclaim_policy = local.openldap_reclaim_policy
   volume_binding_mode = "Immediate"
 }
+
 resource "kubernetes_persistent_volume" "openldap-pv" {
   metadata {
     name = "openldap-pv"
@@ -56,11 +58,27 @@ resource "kubernetes_persistent_volume" "openldap-pv" {
     }
   }
 }
+
+#resource "kubernetes_persistent_volume_claim" "openldap-pvc" {
+#  metadata {
+#    name = local.openldap_pvc_name
+#    namespace = kubernetes_namespace.openldap.id
+#  }
+#  spec {
+#    storage_class_name = local.openldap_storageclass_name
+#    access_modes = [local.openldap_access_mode]
+#    resources {
+#      requests = {
+#        storage = var.openldap_storage
+#      }
+#    }
+#  }
+#}
+#
+# ======== HELM RELEASE ======================================================
+
 resource "helm_release" "openldap" {
   name = "openldap"
-  depends_on = [
-    kubernetes_persistent_volume.openldap-pv
-  ]
   namespace = kubernetes_namespace.openldap.id
   repository = "https://jp-gouin.github.io/helm-openldap"
   chart = "openldap-stack-ha"
@@ -68,13 +86,21 @@ resource "helm_release" "openldap" {
     "${file("helm_values/openldap_helm_values.yaml")}"
   ]
   version = var.openldap_helm_version
+# ldapsearch example: ldapsearch -H ldaps://openldap.gitops.local:636 -x -W -D "cn=admin,dc=gitops,dc=local" cn
+# ldapsearch example: ldapsearch -H ldap://openldap.gitops.local -x -Z -W -D "cn=admin,dc=gitops,dc=local" cn
+# No TLS:
+# ldapsearch example: ldapsearch -H ldap://openldap.gitops.local -x -W -D "cn=admin,dc=gitops,dc=local" cn
   set {
-    name = "users"
-    value = [ "bindldap" ]
+    name  = "env.LDAP_USERS"
+    value = "bind_ldap"
   }
   set {
-    name = "userPasswords"
-    value = [ var.openldap_bind_password ]
+    name  = "env.LDAP_PASSWORDS"
+    value = "Youpiedoopiedoopie"
+  }
+  set {
+    name  = "env.LDAP_GROUP"
+    value = "users"
   }
   set {
     name = "global.ldapDomain"
@@ -91,5 +117,17 @@ resource "helm_release" "openldap" {
   set {
     name = "customTLS.secret"
     value = "openldap-tls"
+  }
+  set {
+    name = "persistence.storageClass"
+    value = local.openldap_storageclass_name
+  }
+  set {
+    name = "persistence.accessModes[0]"
+    value = local.openldap_access_mode
+  }
+  set {
+    name = "persistence.size"
+    value = var.openldap_storage
   }
 }

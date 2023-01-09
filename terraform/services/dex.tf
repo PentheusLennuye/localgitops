@@ -29,15 +29,15 @@ resource "kubernetes_secret" "dex-tls" {
 
 # ========== Helm =============================
 
-resource "helm_release" "dex" {
-  name = "dex"
-  namespace = kubernetes_namespace.dex.id
-  repository = "https://wiremind.github.io/wiremind-helm-charts"
-  chart = "dex"
-  version = var.dex_helm_version
-  values = [ "${file("helm_values/dex_helm_values.yaml")}" ]
-  set {
-    name  = "config.issuer"
-    value = "http:{{ var.dex_fqdn}}"
-  }
-}
+#resource "helm_release" "dex" {
+#  name = "dex"
+#  namespace = kubernetes_namespace.dex.id
+# repository = "https://wiremind.github.io/wiremind-helm-charts"
+# chart = "dex"
+# version = var.dex_helm_version
+# values = [ "${file("helm_values/dex_helm_values.yaml")}" ]
+#  set {
+#    name  = "config.issuer"
+#    value = "http:{{ var.dex_fqdn}}"
+# }
+#}

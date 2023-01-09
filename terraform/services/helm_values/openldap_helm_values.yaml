@@ -1,6 +1,12 @@
 ---
+global:
+  storageClass: 1
 group: users
 customTLS:
+  enabled: true
+ltb-passwd:
+  enabled: false
+persistence:
   enabled: true
 phpldapadmin:
   enabled: true
@@ -9,6 +15,7 @@ phpldapadmin:
     annotations: {}
     path: /
     hosts:
-      phpldapadmin.gitops.local
+      - phpldapadmin.gitops.local
   env:
     PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: "never"
+replicaCount: 1
