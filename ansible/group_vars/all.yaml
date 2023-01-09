@@ -47,6 +47,9 @@ terraform:
     jenkins_admin_password: "{{ jenkins_admin_password }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     jenkins_storage: 10Gi
+    openldap_admin_username: "{{ k3d.openldap_admin_username }}"
+    openldap_admin_password: "{{ k3d.openldap_admin_password }}"
+    openldap_bind_password: "{{ k3d.openldap_bind_password }}"
     openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
     openldap_helm_version: v4.0.0
     openldap_pv_vol: 'pv7'

@@ -91,7 +91,8 @@ at <https:/github.com/settings/tokens>
 2. Set the CA_KEY_PASSWORD environment variable to generate the local domain
    certificates. If it is not set, the script will ask for it.
 
-3. Set the JENKINS_ADMIN_USER, JENKINS_ADMIN_PASSWORD, and HARBOR_ADMIN_PASSWORD
+3. Set the JENKINS_ADMIN_USER, OPENLDAP_ADMIN_USER, JENKINS_ADMIN_PASSWORD,
+   OPENLDAP_ADMIN_PASSWORD, OPENLDAP_BIND_PASSWORD, and HARBOR_ADMIN_PASSWORD
    environment variables for logging as an admin into Jenkins and Harbor
    respectively. If these are not set, the script will ask for them.
 

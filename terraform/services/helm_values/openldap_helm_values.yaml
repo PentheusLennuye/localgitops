@@ -1,0 +1,14 @@
+---
+group: users
+customTLS:
+  enabled: true
+phpldapadmin:
+  enabled: true
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /
+    hosts:
+      phpldapadmin.gitops.local
+  env:
+    PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: "never"

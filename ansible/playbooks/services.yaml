@@ -1,7 +1,7 @@
 ---
   - name: Create service wildcard certificates
     include_tasks: service_certs.yaml
-    loop: ['postgresql', 'redis', 'openldap']
+    loop: ['postgresql', 'redis']
 
   - name: Create harbor certificates
     include_tasks: harbor_certs.yaml

@@ -13,6 +13,21 @@ resource "kubernetes_namespace" "openldap" {
   }
 }
 
+# ========== TLS ======================================
+
+resource "kubernetes_secret" "openldap-tls" {
+  metadata {
+    name = "openldap-tls"
+    namespace = kubernetes_namespace.openldap.id
+  }
+  type = "kubernetes.io/tls"
+  data = {
+    "ca.crt" = "${file("${path.module}/../../cacerts/localgitops-ca.pem")}"
+    "tls.crt" = "${file("${path.module}/../certs/${var.domain}.pem")}"
+    "tls.key" = "${file("${path.module}/../certs/${var.domain}.key")}"
+  }
+}
+
 # ========== Storage Classes =============================
 
 resource "kubernetes_storage_class" "openldap-sc" {
@@ -54,7 +69,27 @@ resource "helm_release" "openldap" {
   ]
   version = var.openldap_helm_version
   set {
+    name = "users"
+    value = [ "bindldap" ]
+  }
+  set {
+    name = "userPasswords"
+    value = [ var.openldap_bind_password ]
+  }
+  set {
     name = "global.ldapDomain"
     value = var.domain
+  }
+  set {
+    name = "global.adminPassword"
+    value = var.openldap_admin_password
+  }
+  set {
+    name = "global.configPassword"
+    value = var.openldap_admin_password
+  }
+  set {
+    name = "customTLS.secret"
+    value = "openldap-tls"
   }
 }
