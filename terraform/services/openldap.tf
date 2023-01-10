@@ -50,7 +50,7 @@ resource "helm_release" "openldap" {
   }
   set {
     name  = "userPasswords"
-    value = "${var.openldap_bind_password}}"
+    value = "${var.openldap_bind_password}"
   }
   set {
     name  = "group"
