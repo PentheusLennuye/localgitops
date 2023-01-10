@@ -1,0 +1,6 @@
+FROM jenkins/jenkins:lts-jdk11
+USER root
+COPY config/localgitops-ca.pem /usr/local/share/ca-certificates/LocalGitOps.crt
+RUN /usr/sbin/update-ca-certificates
+COPY --chown=jenkins:jenkins config/plugins.jenkins.txt /usr/share/jenkins/ref/plugins.txt
+RUN jenkins-plugin-cli -f /usr/share/jenkins/ref/plugins.txt
