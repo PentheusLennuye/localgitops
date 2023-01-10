@@ -2,7 +2,7 @@
 k3d:
   domain: gitops.local
   k8s_hostname: k8s
-  dex_hostname: oicd
+  dex_hostname: dex
   jenkins_hostname: jenkins
   harbor_hostname: harbor
   harbor_notary_hostname: harbor-notary
