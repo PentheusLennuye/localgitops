@@ -19,6 +19,17 @@ resource "kubernetes_namespace" "jenkins" {
   }
 }
 
+# CA Cert ====================================================================
+resource "kubernetes_config_map" "jenkins_ca_crt" {
+  metadata {
+    name = "ca-crt"
+    namespace = kubernetes_namespace.jenkins.metadata[0].name
+  }
+  data = {
+    "ca.crt" = "${file("${path.module}/../../cacerts/localgitops-ca.pem")}"
+  }
+}
+
 # Service account, cluster roles and bindings ====================
 
 resource "kubernetes_service_account" "jenkins-sa" {
@@ -288,6 +299,11 @@ resource "kubernetes_deployment" "jenkins" {
             name = "jenkins-data"
             mount_path = "/var/jenkins_home"
           }
+          volume_mount {
+            name = "cacert"
+            mount_path = "/usr/local/share/ca-certificates/LocalGitOps.crt"
+            sub_path = "ca.crt"
+          }
         }
         volume {
           name = "jenkins-data"
@@ -295,7 +311,14 @@ resource "kubernetes_deployment" "jenkins" {
             claim_name = local.jenkins_pvc_name
           }
         }
+        volume {
+          name = "cacert"
+          config_map {
+	    name = kubernetes_config_map.jenkins_ca_crt.metadata[0].name
+          }
+        }
       }
     }
   }
 }
+

@@ -33,7 +33,7 @@ terraform:
     traefik_helm_version: "v20.8.0"
     vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
   services:
-    dex_helm_version: v2.15.6
+    dex_helm_version: v0.12.1
     dex_fqdn: "{{ k3d.dex_hostname }}.{{ k3d.domain }}"
     domain: "{{ k3d.domain }}"
     harbor_admin_password: "{{ harbor_admin_password }}"
@@ -48,6 +48,7 @@ terraform:
     jenkins_admin_password: "{{ jenkins_admin_password }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     jenkins_storage: 10Gi
+    oidc_client_secret: 'ThisMustNeverBeUsedInProduction'
     openldap_admin_username: "{{ openldap_admin_username }}"
     openldap_admin_password: "{{ openldap_admin_password }}"
     openldap_bind_password: "{{ openldap_bind_password }}"

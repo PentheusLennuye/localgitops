@@ -39,7 +39,12 @@ For this local gitops-in-a-laptop system, we have a:
 - An LDAP service to use in lieu of local databases
 - The OIDC (OpenID Connect) service _Dex_ to practice SSO.
 
-Neither LDAP nor OIDC are tied into the core systems. That would be your job.
+Although OIDC has been configured to use the LDAP backend, the OpenLDAP service
+and the core systems are not configured to use OIDC. To configure, see the
+_dex_ helm charts in terraform/services for hints. The OIDC client secrets are
+hard-coded for now: this is supposed to be a closed system, right?
+
+BTW, Jenkins has several OIDC plugins. The one you want is _oic-auth_.
 
 #### A.1.3 No Orchestrator?
 
@@ -165,6 +170,7 @@ in production.
 - Harbor is at `https://(your local harbor fqdn)`
 - Jenkins is at `https://(your local jenkins fqdn)`
 - Vault is at `https://(your local vault fqdn)`
+- OpenLDAP GUI is at `https://phpldapadmin.(your local domain)`
 
 ### D.2 Logging In
 

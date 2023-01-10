@@ -124,11 +124,15 @@ populate_services () {
   terraform plan -out .the.plan || exit $?
   terraform apply .the.plan || exit $?
 
+  JENKINS=$(kubectl -n jenkins get pods| grep '^jenkins-' | awk '{print $1}')
+  kubectl exec $JENKINS -- update-ca-certificates > /dev/null 2>&1
+
   MULTITOOL=$(kubectl get pods | grep '^multitool-' | awk '{print $1}')
   kubectl exec $MULTITOOL -- update-ca-certificates > /dev/null 2>&1
 
   DOCKER=$(kubectl get pods | grep '^docker-' | awk '{print $1}')
   kubectl exec $DOCKER -- update-ca-certificates > /dev/null 2>&1
+
 }
 
 echo "Local GitOps Pipeline"
