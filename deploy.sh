@@ -102,10 +102,11 @@ install_jenkins_plugins () {
   {
   echo "Installing plugins and rebooting Jenkins"
   jpod=$(kubectl get pods -n jenkins | grep '^jenkins-' | awk '{print $1}')
-  kubectl cp plugins.jenkins.txt jenkins/$jpod:/tmp/plugins.txt || exit $?
+  kubectl cp plugins.jenkins.txt \
+    jenkins/$jpod:/usr/share/jenkins/ref/plugins.txt || exit $?
   kubectl exec -it -n jenkins $jpod -- bash -c \
-    "/bin/jenkins-plugin-cli -d \$JENKINS_HOME/plugins --plugins \
-    -f /tmp/plugins.txt" 
+    "/bin/jenkins-plugin-cli -d \$JENKINS_HOME/plugins \
+    -f /usr/share/jenkins/ref/plugins.txt" 
 
   echo "Rolling restart to force plugin downloads, up to 5min"
   kubectl -n jenkins rollout restart deployment jenkins
