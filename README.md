@@ -21,6 +21,7 @@ DevOps in turn can use the systems furnished by GitOps for their software CI/CD.
 
 ### A.1. Contents of this project
 
+#### A.1.1 Core
 For this local gitops-in-a-laptop system, we have a:
 
 - Deployment platform: Kubernetes on Docker, using K3D
@@ -33,13 +34,20 @@ For this local gitops-in-a-laptop system, we have a:
 - A troubleshooting image within the cluster called "Network Multitool,"
   courtesy of the _wbitt_ GitHub repository.
 
-#### A.1.1 No Orchestrator?
+#### A.1.2 Additional Tools
+
+- An LDAP service to use in lieu of local databases
+- The OIDC (OpenID Connect) service _Dex_ to practice SSO.
+
+Neither LDAP nor OIDC are tied into the core systems. That would be your job.
+
+#### A.1.3 No Orchestrator?
 
 There are no orchestrators yet. Those will be Docker images using any
 combination of Helm, kubectl, and Terraform that you might wish to create.
 
 Hint: Look up [kaniko](https://github.com/GoogleContainerTools/kaniko) as a
-start.
+start, and then fling your image into Harbor.
 
 ## B. Prerequisites
 
@@ -92,9 +100,9 @@ at <https:/github.com/settings/tokens>
    certificates. If it is not set, the script will ask for it.
 
 3. Set the JENKINS_ADMIN_USER, OPENLDAP_ADMIN_USER, JENKINS_ADMIN_PASSWORD,
-   OPENLDAP_ADMIN_PASSWORD, OPENLDAP_BIND_PASSWORD, and HARBOR_ADMIN_PASSWORD
-   environment variables for logging as an admin into Jenkins and Harbor
-   respectively. If these are not set, the script will ask for them.
+   OPENLDAP_ADMIN_PASSWORD, and HARBOR_ADMIN_PASSWORD environment variables for
+   logging as an admin into Jenkins, OpenLDAP and Harbor respectively. If these
+   are not set, the script will ask for them.
 
 4. Set the GITHUB_URL and GITHUB_MACHINE_TOKEN environment variables. Similarly
    to (2), if they are not set, they will be requested. The token is for a
@@ -104,6 +112,9 @@ at <https:/github.com/settings/tokens>
 5. Set the SQL_PASSWORD and REDIS_PASSWORD environment variables. Similarly to
    (2), if they are not set, they will be requested. These are the master
    passwords for PostgreSQL and Redis used by Harbor.
+
+6. Set the OPENLDAP_BIND_PASSWORD. Ensure that it is alphanumeric or the
+   system will not work.
 
 ### C.2 Deploy
 

@@ -1,6 +1,4 @@
 ---
-global:
-  storageClass: 1
 group: users
 customTLS:
   enabled: true
@@ -18,4 +16,3 @@ phpldapadmin:
       - phpldapadmin.gitops.local
   env:
     PHPLDAPADMIN_LDAP_CLIENT_TLS_REQCERT: "never"
-replicaCount: 1

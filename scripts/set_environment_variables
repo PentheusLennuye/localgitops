@@ -107,6 +107,22 @@ do
   fi
 done
 
+while [ -z $OPENLDAP_BIND_PASSWORD ];
+do
+  read -s -p "Enter the OPENLDAP_BIND_PASSWORD" lbp
+  echo
+  if [ "$lbp" == "" ]; then
+    continue
+  fi
+  read -s -p "Confirm OPENLDAP_BIND_PASSWORD: " clbp
+    echo
+  if [ "$lbp" == "$clbp" ]; then
+    export OPENLDAP_BIND_PASSWORD=$lbp
+  else
+    echo "Passwords do not match"
+  fi
+done
+
 # Query sudo password for ansible "become" requirements
 if [ "$OS" != "Darwin" ]; then
   while [ -z $SUDO_PASSWORD ];
