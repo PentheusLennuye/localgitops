@@ -20,7 +20,7 @@ config:
         groupSearch:
           baseDN: ou=groups,dc=gitops,dc=local
           filter: "(objectClass=posixGroup)"
-          nameAttr: uid
+          nameAttr: cn 
           userMatchers:
             - userAttr: uid
               groupAttr: memberuid
