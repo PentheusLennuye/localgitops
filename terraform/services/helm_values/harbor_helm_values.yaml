@@ -1,3 +1,4 @@
+caBundleSecretName: ca-crt
 chartmuseum:
   replicas: 1
 core:

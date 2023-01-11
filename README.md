@@ -172,6 +172,13 @@ in production.
 - Vault is at `https://(your local vault fqdn)`
 - OpenLDAP GUI is at `https://phpldapadmin.(your local domain)`
 
+#### D.1.1 Vault roles
+
+If OIDC is set up (see docs for OpenLDAP and Dex), Vault can also be accessed
+a non-administration user:
+
+Other OICD roles are _owner_ (i.e., ro) and _admin_.
+
 ### D.2 Logging In
 
 - Mozilla does not appear to use the system trust store. You may wish to import
@@ -184,11 +191,24 @@ in production.
 
 - To use Docker to access Harbor, use `docker login <harbor fqdn>`
 
+#### D.2.1 Vault Logins
+
 - Vault is mostly vanilla, so the only way to log in for the first time is
   with the root token. To get the root token, execute:
 
   ```bash
   cat vault-keys.json | jq -r .root_token
+  ```
+
+- However, if OIDC is set up (see docs for OpenLDAP and Dex), one can access
+  the system through both browser (method = OIDC), and command line:
+
+  ```
+  unset VAULT_NAMESPACE
+  unset VAULT_TOKEN
+  export VAULT_ADDR=https://vault.gitops.local
+  vault login -method=oidc
+  vault kv list kv  # Just to confirm
   ```
 
 ### D.3 Troubleshooting

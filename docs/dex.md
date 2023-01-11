@@ -6,10 +6,19 @@ provided that the hostname and domain are the default "dex" and "gitops.local",
 respectively.
 
 At the time of writing, SSL verification is troublesome as the ca certs imports
-are being ignored by Jenkins and Harbor. SSL verification might best be turned
-off.
+are being ignored by Jenkins. SSL verification might best be turned
+off on Jenkins.
 
-First off, configure OpenLDAP. Then come back here.
+First off, configure OpenLDAP with the instructions in [openldap](openldap.md).
+You will want the following groups:
+
+  - jenkins_users
+  - jenkins_admins
+  - vault_readers
+  - vault_owners
+  - vault_admins
+  - harbor_users
+  - harbor_admins
 
 ## Jenkins
 
@@ -46,7 +55,7 @@ Got to _Configuration > Authentication_
 - OIDC Group Filter: As per _docs/openldap.md_
 - OIDC Admin Group: As per _docs/openldap.md_
 - OIDC Scope: __openid,offline_access,profile,email__
-- Verify Certificate: __unchecked__.
+- Verify Certificate: __checked__.
 
 ## Vault
 
@@ -56,6 +65,7 @@ Assuming the OIDC URL is <https://dex.gitops.local>, to enable OIDC:
 
 1. Preliminary
   ```
+  unset VAULT_NAMESPACE  # Just in case you were using the enterprise version
   export VAULT_ADDR=https://<your vault fqdn>
   ```
 2. If Vault is sealed:
@@ -63,20 +73,34 @@ Assuming the OIDC URL is <https://dex.gitops.local>, to enable OIDC:
   VAULT_UNSEAL_KEY=$(cat vault-keys.json | jq -r '.unseal_keys_b64[0]')
   vault operator unseal $VAULT_UNSEAL_KEY
   ```
-3. Enable and configure OIDC auth method:
+3. Configure OIDC auth method:
   ```
   VAULT_ROOT_TOKEN=$(cat vault-keys.json | jq -r '.root_token')
   CA_PEM=$(cat cacerts/localgitops-ca.pem)
   CLIENT_SECRET=$(grep oidc_client_secret terraform/services/terraform.tfvars |\
     awk '{print $3}' | sed s'/"//g')
   vault login token=$VAULT_ROOT_TOKEN
-  vault auth enable oidc
   vault write auth/oidc/config \
-         oidc_discovery_url="https://dex.gitops.local/" \
-         default_role="reader" \
-	 jwks_ca_pem="${CA_PEM}" \
+         default_role="user" \
+         oidc_discovery_url="https://dex.gitops.local" \
+	 oidc_discovery_ca_pem="${CA_PEM}" \
          oidc_client_id="vault-gitopslocal" \
          oidc_client_secret="${CLIENT_SECRET}"
   ```
   Note that the discovery URL does *not* use the .well-known... path.
   The "vault-gitopslocal" as oidc_client_id is from the original helm values.
+
+4. Set up the reader role, which is added to by the groups
+   ```
+   REDIRECT_UI_URI=https://vault.gitops.local/ui/vault/auth/oidc/oidc/callback
+   REDIRECT_CLI_URI=http://localhost:8250/oidc/callback
+   vault write auth/oidc/role/user \
+     allowed_redirect_uris="${REDIRECT_UI_URI}" \
+     allowed_redirect_uris="${REDIRECT_CLI_URI}" \
+     bound_audiences="vault-gitopslocal" \
+     groups_claim="groups" \
+     oidc_scopes="groups" \
+     token_policies="default" \
+     user_claim="sub"
+   ```
+

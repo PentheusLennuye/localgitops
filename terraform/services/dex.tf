@@ -66,15 +66,20 @@ resource "helm_release" "dex" {
    value = "${var.oidc_client_secret}"
  }
  set {
+   name  = "config.staticClients[1].redirectURIs[0]"
+   value = "https://${var.vault_fqdn}/ui/vault/auth/oidc/oidc/callback"
+ }
+ # Believe it or not, this is what it is supposed to be
+ set {
    name  = "config.staticClients[1].redirectURIs[1]"
-   value = "https://${var.vault_fqdn}/callback"
+   value = "http://localhost:8250/oidc/callback"
  }
  set {
    name  = "config.staticClients[1].secret"
    value = "${var.oidc_client_secret}"
  }
  set {
-   name  = "config.staticClients[2].redirectURIs[1]"
+   name  = "config.staticClients[2].redirectURIs[0]"
    value = "https://${var.harbor_fqdn}/c/oidc/callback"
  }
  set {
