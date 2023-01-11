@@ -62,6 +62,7 @@ terraform:
     vault_helm_version: v0.22.1
     vault_storage: 10Gi
   populate:
+    domain: "{{ k3d.domain }}"
     github_machine_token: "{{ github_machine_token }}"
     jenkins_admin_id: "{{ jenkins_admin_id }}"
     jenkins_admin_password: "{{ jenkins_admin_password }}"

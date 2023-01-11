@@ -27,28 +27,50 @@ resource "vault_kv_secret_backend_v2" "config" {
   delete_version_after = 12600
   cas_required         = false
 }
-resource "vault_policy" "localgitops-jenkins" {
-  name   = "${var.jenkins_fqdn}"
-  policy = <<EOLGJPOL
-path "auth/approle/role/${var.jenkins_fqdn}/role-id" {
-  capabilities = [ "read" ]
-}
-path "auth/approle/role/${var.jenkins_fqdn}/secret-id" {
-  capabilities = [ "update" ]
-}
-path "kv/data/ci/*" {
-  capabilities = [ "read" ]
-}
-EOLGJPOL
-}
+
 resource "vault_policy" "ci" {
   name   = "ci"
-  policy = <<EOCIPOL
-path "kv/data/ci/*" {
-  capabilities = [ "read" ]
+  policy = <<-EOCIPOL
+    path "kv/data/ci/*" {
+      capabilities = [ "read" ]
+    }
+  EOCIPOL
 }
-EOCIPOL
+
+resource "vault_policy" "human_reader" {
+  name   = "human_reader"
+  policy = <<-EOHRPOL
+    path "/secret/*" {
+      capabilities = [ "read", "list" ]
+    }
+  EOHRPOL
 }
+
+resource "vault_policy" "human_admin" {
+  name   = "human_admin"
+  policy = <<-EOHAPOL
+    path "/secret/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+  EOHAPOL
+}
+
+# Jenkins ====================================================================
+resource "vault_policy" "localgitops-jenkins" {
+  name   = "${var.jenkins_fqdn}"
+  policy = <<-EOLGJPOL
+    path "auth/approle/role/${var.jenkins_fqdn}/role-id" {
+      capabilities = [ "read" ]
+    }
+    path "auth/approle/role/${var.jenkins_fqdn}/secret-id" {
+      capabilities = [ "update" ]
+    }
+    path "kv/data/ci/*" {
+      capabilities = [ "read" ]
+    }
+  EOLGJPOL
+}
+
 resource "vault_approle_auth_backend_role" "localgitops-jenkins" {
   backend               = vault_auth_backend.approle.path
   role_name             = "${var.jenkins_fqdn}"
@@ -61,6 +83,26 @@ resource "vault_approle_auth_backend_role" "localgitops-jenkins" {
   token_ttl             = 600
   token_max_ttl         = 1800
   token_type            = "service"
+}
+
+
+# OIDC =======================================================================
+resource "vault_policy" "localgitops-oidc" {
+  name = "oidc-${var.domain}"
+  policy = <<-EOOIDCPOL
+    path "sys/auth/oidc" {
+      capabilities = [ "create", "read", "update", "delete", "sudo" ]
+    } 
+    path "auth/oidc/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+    path "sys/policies/acl/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+    path "sys/mounts" {
+      capabilities = [ "read" ]
+    }
+  EOOIDCPOL
 }
 
 # Test Secret

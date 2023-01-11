@@ -47,3 +47,36 @@ Got to _Configuration > Authentication_
 - OIDC Admin Group: As per _docs/openldap.md_
 - OIDC Scope: __openid,offline_access,profile,email__
 - Verify Certificate: __unchecked__.
+
+## Vault
+
+The OIDC Policy is already set in Vault.
+
+Assuming the OIDC URL is <https://dex.gitops.local>, to enable OIDC:
+
+1. Preliminary
+  ```
+  export VAULT_ADDR=https://<your vault fqdn>
+  ```
+2. If Vault is sealed:
+  ```
+  VAULT_UNSEAL_KEY=$(cat vault-keys.json | jq -r '.unseal_keys_b64[0]')
+  vault operator unseal $VAULT_UNSEAL_KEY
+  ```
+3. Enable and configure OIDC auth method:
+  ```
+  VAULT_ROOT_TOKEN=$(cat vault-keys.json | jq -r '.root_token')
+  CA_PEM=$(cat cacerts/localgitops-ca.pem)
+  CLIENT_SECRET=$(grep oidc_client_secret terraform/services/terraform.tfvars |\
+    awk '{print $3}' | sed s'/"//g')
+  vault login token=$VAULT_ROOT_TOKEN
+  vault auth enable oidc
+  vault write auth/oidc/config \
+         oidc_discovery_url="https://dex.gitops.local/" \
+         default_role="reader" \
+	 jwks_ca_pem="${CA_PEM}" \
+         oidc_client_id="vault-gitopslocal" \
+         oidc_client_secret="${CLIENT_SECRET}"
+  ```
+  Note that the discovery URL does *not* use the .well-known... path.
+  The "vault-gitopslocal" as oidc_client_id is from the original helm values.
