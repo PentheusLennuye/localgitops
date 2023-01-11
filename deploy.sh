@@ -30,6 +30,9 @@ fill_variables_and_configs () {
     "jenkins_admin_id=$JENKINS_ADMIN_USER \
     jenkins_admin_password=$JENKINS_ADMIN_PASSWORD \
     harbor_admin_password=$HARBOR_ADMIN_PASSWORD \
+    openldap_admin_username=$OPENLDAP_ADMIN_USER \
+    openldap_admin_password=$OPENLDAP_ADMIN_PASSWORD \
+    openldap_bind_password=$OPENLDAP_BIND_PASSWORD \
     redis_password=$REDIS_PASSWORD \
     sql_username=$SQL_USERNAME \
     sql_password=$SQL_PASSWORD \
@@ -99,10 +102,11 @@ install_jenkins_plugins () {
   {
   echo "Installing plugins and rebooting Jenkins"
   jpod=$(kubectl get pods -n jenkins | grep '^jenkins-' | awk '{print $1}')
-  kubectl cp plugins.jenkins.txt jenkins/$jpod:/tmp/plugins.txt || exit $?
+  kubectl cp plugins.jenkins.txt \
+    jenkins/$jpod:/usr/share/jenkins/ref/plugins.txt || exit $?
   kubectl exec -it -n jenkins $jpod -- bash -c \
-    "/bin/jenkins-plugin-cli -d \$JENKINS_HOME/plugins --plugins \
-    -f /tmp/plugins.txt" 
+    "/bin/jenkins-plugin-cli -d \$JENKINS_HOME/plugins \
+    -f /usr/share/jenkins/ref/plugins.txt" 
 
   echo "Rolling restart to force plugin downloads, up to 5min"
   kubectl -n jenkins rollout restart deployment jenkins
@@ -126,6 +130,7 @@ populate_services () {
 
   DOCKER=$(kubectl get pods | grep '^docker-' | awk '{print $1}')
   kubectl exec $DOCKER -- update-ca-certificates > /dev/null 2>&1
+
 }
 
 echo "Local GitOps Pipeline"

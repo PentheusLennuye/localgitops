@@ -33,6 +33,7 @@
         - "DNS:*.{{ item }}"
         - "DNS:*.{{ item }}.svc"
         - "DNS:*.{{ item }}.svc.cluster.local"
+        - "DNS:{{ item }}.{{ k3d.domain }}"
     when: not cert_exists.stat.exists
     register: csr
     run_once: true

@@ -2,10 +2,12 @@
 k3d:
   domain: gitops.local
   k8s_hostname: k8s
+  dex_hostname: dex
   jenkins_hostname: jenkins
-  vault_hostname: vault
   harbor_hostname: harbor
   harbor_notary_hostname: harbor-notary
+  openldap_hostname: openldap
+  vault_hostname: vault
   pvdir: ../volumes
   persistent_volumes: [ pv1, pv2, pv3, pv4, pv5, pv6 ]
 terraform:
@@ -23,12 +25,16 @@ terraform:
     vault_pv: pv2
   networking:
     domain: "{{ k3d.domain }}"
+    dex_fqdn: "{{ k3d.dex_hostname }}.{{ k3d.domain }}"
     harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     k8s_fqdn: "{{ k3d.k8s_hostname }}.{{ k3d.domain }}"
+    openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
     traefik_helm_version: "v20.8.0"
     vault_fqdn: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
   services:
+    dex_helm_version: v0.12.1
+    dex_fqdn: "{{ k3d.dex_hostname }}.{{ k3d.domain }}"
     domain: "{{ k3d.domain }}"
     harbor_admin_password: "{{ harbor_admin_password }}"
     harbor_fqdn: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
@@ -42,7 +48,12 @@ terraform:
     jenkins_admin_password: "{{ jenkins_admin_password }}"
     jenkins_fqdn: "{{ k3d.jenkins_hostname }}.{{ k3d.domain }}"
     jenkins_storage: 10Gi
-    postgresql_version: '13.9.0'
+    oidc_client_secret: 'ThisMustNeverBeUsedInProduction'
+    openldap_admin_username: "{{ openldap_admin_username }}"
+    openldap_admin_password: "{{ openldap_admin_password }}"
+    openldap_bind_password: "{{ openldap_bind_password }}"
+    openldap_fqdn: "{{ k3d.openldap_hostname}}.{{ k3d.domain }}"
+    openldap_helm_version: v4.0.2
     postgresql_helm_version: v12.1.6
     postgresql_password: "{{ sql_password }}"
     postgresql_storage: 10Gi
@@ -51,6 +62,7 @@ terraform:
     vault_helm_version: v0.22.1
     vault_storage: 10Gi
   populate:
+    domain: "{{ k3d.domain }}"
     github_machine_token: "{{ github_machine_token }}"
     jenkins_admin_id: "{{ jenkins_admin_id }}"
     jenkins_admin_password: "{{ jenkins_admin_password }}"

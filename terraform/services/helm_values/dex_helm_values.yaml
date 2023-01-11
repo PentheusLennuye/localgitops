@@ -1,0 +1,66 @@
+---
+config:
+  connectors:
+    - type: ldap
+      name: OpenLDAP
+      id: ldap
+      config:
+        bindDN: cn=bind_ldap,ou=users,dc=gitops,dc=local
+        insecureNoSSL: false
+        rootCA: /etc/certs/ca.crt
+        usernamePrompt: Username
+        userSearch:
+          baseDN: ou=users,dc=gitops,dc=local
+          emailAttr: mail
+          filter: "(objectClass=inetOrgPerson)"
+          idAttr: uid
+          nameAttr: cn
+          preferredUsernameAttr: uid
+          username: uid
+        groupSearch:
+          baseDN: ou=groups,dc=gitops,dc=local
+          filter: "(objectClass=posixGroup)"
+          nameAttr: cn 
+          userMatchers:
+            - userAttr: uid
+              groupAttr: memberuid
+  enablePasswordDB: true
+  staticClients:
+    - id: jenkins-gitopslocal
+      name: 'Jenkins Local GitOps'
+    - id: vault-gitopslocal
+      name: 'Vault Local GitOps'
+    - id: harbor-gitopslocal
+      name: 'Harbor Local GitOps'
+  storage:
+    type: memory
+  web:
+    tlsCert: /etc/certs/tls.crt
+    tlsKey: /etc/certs/tls.key
+
+https:
+  enabled: true
+
+grpc:
+  enabled: false
+
+ingress:
+  enabled: true
+
+volumes:
+  - name: etc-tls-certs 
+    secret:
+      secretName: dex-tls-internal
+
+volumeMounts:
+  - name: etc-tls-certs
+    mountPath: /etc/certs
+    readOnly: true
+
+service:
+  ports:
+    http:
+      port: 80
+    https:
+      port: 443
+

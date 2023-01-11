@@ -10,6 +10,9 @@ resource "vault_auth_backend" "approle" {
 resource "vault_auth_backend" "userpass" {
   type = "userpass"
 }
+resource "vault_auth_backend" "oidc" {
+  type = "oidc"
+}
 resource "vault_mount" "kvv2" {
   path        = "kv"
   type        = "kv"
@@ -27,28 +30,129 @@ resource "vault_kv_secret_backend_v2" "config" {
   delete_version_after = 12600
   cas_required         = false
 }
-resource "vault_policy" "localgitops-jenkins" {
-  name   = "${var.jenkins_fqdn}"
-  policy = <<EOLGJPOL
-path "auth/approle/role/${var.jenkins_fqdn}/role-id" {
-  capabilities = [ "read" ]
+
+# ===== Policies =============================================================
+
+# Null policy
+resource "vault_policy" "null" {
+  name   = "null"
+  policy = <<-EONULPOL
+    path "*" {
+      capabilities = []
+    }
+  EONULPOL
 }
-path "auth/approle/role/${var.jenkins_fqdn}/secret-id" {
-  capabilities = [ "update" ]
-}
-path "kv/data/ci/*" {
-  capabilities = [ "read" ]
-}
-EOLGJPOL
-}
+
+# CI/CD Least Privilege
 resource "vault_policy" "ci" {
   name   = "ci"
-  policy = <<EOCIPOL
-path "kv/data/ci/*" {
-  capabilities = [ "read" ]
+  policy = <<-EOCIPOL
+    path "kv/data/ci/*" {
+      capabilities = [ "read" ]
+    }
+  EOCIPOL
 }
-EOCIPOL
+
+# People Moderate Privilege
+resource "vault_policy" "ro" {
+  name   = "ro"
+  policy = <<-EOHRPOL
+    path "kv/*" {
+      capabilities = [ "read", "list" ]
+    }
+  EOHRPOL
 }
+
+resource "vault_policy" "rw" {
+  name   = "rw"
+  policy = <<-EOHAPOL
+    path "kv/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+  EOHAPOL
+}
+
+# Admin Big Privilege
+resource "vault_policy" "admin" {
+  name   = "admin"
+  policy = <<-EOADMINPOLICY
+    path "sys/health"
+    {
+      capabilities = ["read", "sudo"]
+    }
+    
+    # Create and manage ACL policies broadly across Vault
+    
+    # List existing policies
+    path "sys/policies/acl"
+    {
+      capabilities = ["list"]
+    }
+    
+    # Create and manage ACL policies
+    path "sys/policies/acl/*"
+    {
+      capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+    }
+    
+    # Enable and manage authentication methods broadly across Vault
+    
+    # Manage auth methods broadly across Vault
+    path "auth/*"
+    {
+      capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+    }
+    
+    # Create, update, and delete auth methods
+    path "sys/auth/*"
+    {
+      capabilities = ["create", "update", "delete", "sudo"]
+    }
+    
+    # List auth methods
+    path "sys/auth"
+    {
+      capabilities = ["read"]
+    }
+    
+    # Enable and manage the key/value secrets engine at `secret/` path
+    
+    # List, create, update, and delete key/value secrets
+    path "kv/*"
+    {
+      capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+    }
+    
+    # Manage secrets engines
+    path "sys/mounts/*"
+    {
+      capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+    }
+    
+    # List existing secrets engines.
+    path "sys/mounts"
+    {
+      capabilities = ["read"]
+    }
+  EOADMINPOLICY
+}
+
+# Jenkins ====================================================================
+resource "vault_policy" "localgitops-jenkins" {
+  name   = "${var.jenkins_fqdn}"
+  policy = <<-EOLGJPOL
+    path "auth/approle/role/${var.jenkins_fqdn}/role-id" {
+      capabilities = [ "read" ]
+    }
+    path "auth/approle/role/${var.jenkins_fqdn}/secret-id" {
+      capabilities = [ "update" ]
+    }
+    path "kv/data/ci/*" {
+      capabilities = [ "read" ]
+    }
+  EOLGJPOL
+}
+
 resource "vault_approle_auth_backend_role" "localgitops-jenkins" {
   backend               = vault_auth_backend.approle.path
   role_name             = "${var.jenkins_fqdn}"
@@ -63,6 +167,72 @@ resource "vault_approle_auth_backend_role" "localgitops-jenkins" {
   token_type            = "service"
 }
 
+
+# OIDC =======================================================================
+resource "vault_policy" "localgitops-oidc" {
+  name = "oidc-${var.domain}"
+  policy = <<-EOOIDCPOL
+    path "sys/auth/oidc" {
+      capabilities = [ "create", "read", "update", "delete", "sudo" ]
+    } 
+    path "auth/oidc/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+    path "sys/policies/acl/*" {
+      capabilities = [ "create", "read", "update", "delete", "list" ]
+    }
+    path "sys/mounts" {
+      capabilities = [ "read" ]
+    }
+  EOOIDCPOL
+}
+
+# Groups tied to policies
+resource "vault_identity_group" "kv_admin" {
+  metadata = {
+    responsibility = "Full Access to Vault"
+  }
+  name = "kv_admin"
+  type = "external"
+  policies = ["admin"]
+}
+
+resource "vault_identity_group" "kv_rw" {
+  metadata = {
+    responsibility = "Write, Edit, and Delete Secrets"
+  }
+  name = "kv_rw"
+  type = "external"
+  policies = ["rw"]
+}
+
+resource "vault_identity_group" "kv_ro" {
+  metadata = {
+    responsibility = "Write, Edit, and Delete Secrets"
+  }
+  name = "kv_ro"
+  type = "external"
+  policies = ["ro"]
+}
+
+# OIDC Group Aliases 
+resource "vault_identity_group_alias" "vault_admins" {
+  name = "vault_admins"
+  mount_accessor = vault_auth_backend.oidc.accessor
+  canonical_id = vault_identity_group.kv_admin.id
+}
+resource "vault_identity_group_alias" "vault_owners" {
+  name = "vault_owners"
+  mount_accessor = vault_auth_backend.oidc.accessor
+  canonical_id = vault_identity_group.kv_rw.id
+}
+resource "vault_identity_group_alias" "vault_readers" {
+  name = "vault_readers"
+  mount_accessor = vault_auth_backend.oidc.accessor
+  canonical_id = vault_identity_group.kv_ro.id
+}
+
+# ===== GITOPS SECRETS =======================================================
 # Test Secret
 resource "vault_kv_secret_v2" "kvtest" {
   depends_on                 = [ time_sleep.wait_5_seconds]

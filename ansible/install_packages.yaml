@@ -8,6 +8,7 @@
     vh: "{{ k3d.vault_hostname }}.{{ k3d.domain }}"
     hh: "{{ k3d.harbor_hostname }}.{{ k3d.domain }}"
     hnh: "{{ k3d.harbor_notary_hostname }}.{{ k3d.domain }}"
+    oh: "phpldapadmin.{{ k3d.domain }}"
   tasks:
     - name: Append hostname alias to /etc/hosts
       when: ansible_facts['os_family'] != 'Darwin'
@@ -15,8 +16,8 @@
       ansible.builtin.lineinfile:
         path: /etc/hosts
         backrefs: true
-        regexp: ^(127\.0\.0\.1)\s+(?!{{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }}) ?(.*)$
-        line: \1 {{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }} \2
+        regexp: ^(127\.0\.0\.1)\s+(?!{{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }} {{ oh }}) ?(.*)$
+        line: \1 {{ kh }} {{ jh }} {{ vh }} {{ hh }} {{ hnh }} {{ oh }} \2
     - name: Install required binaries on Mac
       ansible.builtin.include_tasks: playbooks/binaries_darwin.yaml
       when: ansible_facts['os_family'] == 'Darwin'

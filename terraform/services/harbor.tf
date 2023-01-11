@@ -18,6 +18,15 @@ resource "kubernetes_namespace" "harbor" {
 }
 
 # Certs ===========================================================
+resource "kubernetes_secret" "harbor_ca_crt" {
+  metadata {
+    name = "ca-crt"
+    namespace = kubernetes_namespace.harbor.metadata[0].name
+  }
+  data = {
+    "ca.crt" = "${file("${path.module}/../../cacerts/localgitops-ca.pem")}"
+  }
+}
 resource "kubernetes_secret" "harbor-tls" {
   count = length(local.harbors)
   metadata {
